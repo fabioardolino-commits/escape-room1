@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Classe di Nessuno — Escape Room</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --paper: #f5f0e8;
+    --paper2: #ede7d9;
+    --amber: #e8a020;
+    --amber-light: #fdf0d0;
+    --teal: #1a7a6e;
+    --teal-light: #d0efea;
+    --coral: #c94a2a;
+    --coral-light: #fde8e0;
+    --purple: #5a3e8a;
+    --purple-light: #ede0ff;
+    --green: #2a6e3a;
+    --green-light: #d8f0de;
+    --gray: #7a7a8a;
+    --border: rgba(26,26,46,0.12);
+    --shadow: 0 4px 24px rgba(26,26,46,0.10);
+    --shadow-lg: 0 12px 48px rgba(26,26,46,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--ink);
+    color: var(--paper);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── TEXTURE BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(90,62,138,0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(26,122,110,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 30%, rgba(232,160,32,0.08) 0%, transparent 40%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .screen { display: none; position: relative; z-index: 1; }
+  .screen.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ── INTRO SCREEN ── */
+  #intro {
+    align-items: center; justify-content: center;
+    padding: 2rem; text-align: center;
+  }
+
+  .intro-badge {
+    display: inline-block;
+    background: rgba(232,160,32,0.15);
+    border: 1px solid rgba(232,160,32,0.4);
+    color: var(--amber);
+    font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase;
+    padding: 6px 16px; border-radius: 20px; margin-bottom: 2rem;
+  }
+
+  .intro-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    font-weight: 800; line-height: 1.05;
+    margin-bottom: 1rem;
+    color: var(--paper);
+  }
+
+  .intro-title span { color: var(--amber); }
+
+  .intro-sub {
+    font-size: 1.1rem; color: rgba(245,240,232,0.65);
+    max-width: 540px; line-height: 1.65;
+    margin: 0 auto 2.5rem;
+  }
+
+  .story-box {
+    background: rgba(245,240,232,0.05);
+    border: 1px solid rgba(245,240,232,0.12);
+    border-radius: 16px;
+    padding: 1.75rem 2rem;
+    max-width: 600px; margin: 0 auto 2.5rem;
+    text-align: left;
+  }
+
+  .story-box p {
+    font-size: 15px; line-height: 1.75;
+    color: rgba(245,240,232,0.8);
+    margin-bottom: .75rem;
+  }
+  .story-box p:last-child { margin-bottom: 0; }
+  .story-box strong { color: var(--paper); font-weight: 500; }
+
+  .roles-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 10px; max-width: 600px; margin: 0 auto 2.5rem;
+  }
+
+  .role-card {
+    background: rgba(245,240,232,0.05);
+    border: 1px solid rgba(245,240,232,0.1);
+    border-radius: 12px; padding: 14px 16px;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+
+  .role-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0; margin-top: 1px;
+  }
+
+  .role-name { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; color: var(--paper); margin-bottom: 2px; }
+  .role-desc { font-size: 12px; color: rgba(245,240,232,0.55); line-height: 1.5; }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    background: var(--amber);
+    color: var(--ink);
+    border: none; border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 700;
+    padding: 14px 36px; cursor: pointer;
+    transition: all .2s; letter-spacing: .02em;
+  }
+  .btn-primary:hover { background: #f0b030; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,160,32,0.35); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-secondary {
+    background: transparent;
+    color: rgba(245,240,232,0.7);
+    border: 1px solid rgba(245,240,232,0.2);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 400;
+    padding: 10px 22px; cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-secondary:hover { background: rgba(245,240,232,0.06); color: var(--paper); }
+
+  /* ── MAP SCREEN ── */
+  #map { padding: 2rem; align-items: center; }
+
+  .map-header {
+    text-align: center; margin-bottom: 2rem; width: 100%;
+  }
+
+  .progress-bar-wrap {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 8px; max-width: 600px; margin-left: auto; margin-right: auto;
+  }
+
+  .progress-label { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; color: var(--amber); letter-spacing: .08em; text-transform: uppercase; }
+
+  .progress-track {
+    flex: 1; height: 4px; background: rgba(245,240,232,0.1);
+    border-radius: 2px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: var(--amber);
+    border-radius: 2px; transition: width .6s ease;
+  }
+
+  .map-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem; font-weight: 700;
+    color: var(--paper); margin-bottom: 6px;
+  }
+  .map-sub { font-size: 14px; color: rgba(245,240,232,0.5); }
+
+  .rooms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px; width: 100%; max-width: 900px;
+  }
+
+  .room-card {
+    background: rgba(245,240,232,0.04);
+    border: 1px solid rgba(245,240,232,0.1);
+    border-radius: 20px; padding: 1.75rem;
+    cursor: pointer; transition: all .25s;
+    position: relative; overflow: hidden;
+  }
+
+  .room-card::before {
+    content: ''; position: absolute; inset: 0;
+    opacity: 0; transition: opacity .25s;
+  }
+
+  .room-card.c-amber::before { background: radial-gradient(ellipse at top left, rgba(232,160,32,0.08) 0%, transparent 60%); }
+  .room-card.c-teal::before { background: radial-gradient(ellipse at top left, rgba(26,122,110,0.1) 0%, transparent 60%); }
+  .room-card.c-coral::before { background: radial-gradient(ellipse at top left, rgba(201,74,42,0.1) 0%, transparent 60%); }
+  .room-card.c-purple::before { background: radial-gradient(ellipse at top left, rgba(90,62,138,0.12) 0%, transparent 60%); }
+  .room-card.c-blue::before { background: radial-gradient(ellipse at top left, rgba(26,80,150,0.1) 0%, transparent 60%); }
+
+  .room-card:hover { transform: translateY(-3px); border-color: rgba(245,240,232,0.22); }
+  .room-card:hover::before { opacity: 1; }
+
+  .room-card.locked { opacity: .5; cursor: not-allowed; pointer-events: none; }
+  .room-card.solved { border-color: rgba(42,110,58,0.5); background: rgba(42,110,58,0.06); }
+  .room-card.solved::before { background: radial-gradient(ellipse at top left, rgba(42,110,58,0.08) 0%, transparent 60%); opacity: 1; }
+
+  .room-number {
+    font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: .12em; text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .room-avatar {
+    width: 52px; height: 52px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; margin-bottom: 1rem;
+  }
+
+  .room-name { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--paper); margin-bottom: 4px; }
+  .room-age { font-size: 13px; color: rgba(245,240,232,0.5); margin-bottom: 12px; }
+  .room-preview { font-size: 13px; color: rgba(245,240,232,0.65); line-height: 1.6; }
+
+  .room-status {
+    margin-top: 1.25rem; padding-top: 1rem;
+    border-top: 1px solid rgba(245,240,232,0.08);
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600;
+    letter-spacing: .06em; text-transform: uppercase;
+  }
+
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .status-open .status-dot { background: var(--amber); }
+  .status-locked .status-dot { background: rgba(245,240,232,0.25); }
+  .status-solved .status-dot { background: var(--green); }
+  .status-open { color: var(--amber); }
+  .status-locked { color: rgba(245,240,232,0.3); }
+  .status-solved { color: #4ab864; }
+
+  /* ── ROOM SCREEN ── */
+  #room {
+    padding: 2rem;
+    align-items: center;
+  }
+
+  .room-layout {
+    width: 100%; max-width: 820px;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+
+  .room-top-bar {
+    display: flex; align-items: center; gap: 16px;
+  }
+
+  .back-btn {
+    background: rgba(245,240,232,0.07);
+    border: 1px solid rgba(245,240,232,0.12);
+    border-radius: 10px; padding: 8px 16px;
+    color: rgba(245,240,232,0.7); font-size: 13px;
+    cursor: pointer; transition: all .15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .back-btn:hover { background: rgba(245,240,232,0.12); color: var(--paper); }
+
+  .room-breadcrumb {
+    font-family: 'Syne', sans-serif; font-size: 12px;
+    font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    color: rgba(245,240,232,0.4);
+  }
+
+  .room-main {
+    background: rgba(245,240,232,0.04);
+    border: 1px solid rgba(245,240,232,0.1);
+    border-radius: 20px; overflow: hidden;
+  }
+
+  .room-hero {
+    padding: 2rem; border-bottom: 1px solid rgba(245,240,232,0.08);
+    display: flex; gap: 1.5rem; align-items: flex-start;
+  }
+
+  .room-hero-avatar {
+    width: 64px; height: 64px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; flex-shrink: 0;
+  }
+
+  .room-hero-info { flex: 1; }
+  .room-hero-label { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 4px; }
+  .room-hero-name { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--paper); margin-bottom: 6px; }
+  .room-hero-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tag {
+    font-size: 12px; padding: 3px 10px; border-radius: 20px;
+    background: rgba(245,240,232,0.08); color: rgba(245,240,232,0.65);
+    border: 1px solid rgba(245,240,232,0.1);
+  }
+
+  .room-sections { padding: 1.75rem; display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .section-block { }
+  .section-title {
+    font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: .12em; text-transform: uppercase;
+    margin-bottom: .75rem; display: flex; align-items: center; gap: 8px;
+  }
+  .section-title-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  .clue-box {
+    background: rgba(245,240,232,0.04);
+    border: 1px solid rgba(245,240,232,0.08);
+    border-left: 3px solid;
+    border-radius: 0 12px 12px 0;
+    padding: 1.1rem 1.25rem;
+    font-size: 14px; line-height: 1.75;
+    color: rgba(245,240,232,0.8);
+  }
+  .clue-box strong { color: var(--paper); font-weight: 500; }
+  .clue-box em { color: rgba(245,240,232,0.55); font-style: italic; }
+
+  .voice-box {
+    background: rgba(245,240,232,0.06);
+    border: 1px solid rgba(245,240,232,0.1);
+    border-radius: 14px; padding: 1.25rem;
+    font-size: 14px; line-height: 1.8;
+    color: rgba(245,240,232,0.85);
+    font-style: italic; position: relative;
+  }
+  .voice-box::before {
+    content: '"';
+    font-family: 'Syne', sans-serif; font-size: 3rem; line-height: 1;
+    position: absolute; top: -4px; left: 12px;
+    opacity: .15; pointer-events: none;
+  }
+  .voice-author {
+    margin-top: .75rem; font-size: 12px; font-style: normal;
+    color: rgba(245,240,232,0.4); font-family: 'Syne', sans-serif;
+    font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  }
+
+  .enigma-box {
+    background: rgba(232,160,32,0.06);
+    border: 1px solid rgba(232,160,32,0.2);
+    border-radius: 14px; padding: 1.5rem;
+  }
+
+  .enigma-question {
+    font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+    color: var(--paper); margin-bottom: 1.25rem; line-height: 1.45;
+  }
+
+  .options-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .option-btn {
+    background: rgba(245,240,232,0.05);
+    border: 1px solid rgba(245,240,232,0.12);
+    border-radius: 12px; padding: 12px 16px;
+    text-align: left; cursor: pointer; transition: all .2s;
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    color: rgba(245,240,232,0.8); line-height: 1.5;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+
+  .option-letter {
+    width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0;
+    background: rgba(245,240,232,0.08);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+    color: rgba(245,240,232,0.5); transition: all .2s;
+  }
+
+  .option-btn:hover {
+    background: rgba(245,240,232,0.09);
+    border-color: rgba(245,240,232,0.25);
+    transform: translateX(3px);
+    color: var(--paper);
+  }
+  .option-btn:hover .option-letter { background: rgba(245,240,232,0.15); color: var(--paper); }
+
+  .option-btn.selected-correct {
+    background: rgba(42,110,58,0.12);
+    border-color: rgba(42,110,58,0.5);
+    color: var(--paper);
+  }
+  .option-btn.selected-correct .option-letter { background: var(--green); color: white; }
+
+  .option-btn.selected-wrong {
+    background: rgba(201,74,42,0.1);
+    border-color: rgba(201,74,42,0.4);
+    color: rgba(245,240,232,0.5);
+  }
+  .option-btn.selected-wrong .option-letter { background: var(--coral); color: white; }
+
+  .option-btn.disabled { pointer-events: none; }
+
+  .feedback-box {
+    margin-top: 1.25rem; padding: 1.25rem;
+    border-radius: 12px; font-size: 14px; line-height: 1.7;
+    display: none;
+  }
+  .feedback-box.show { display: block; }
+  .feedback-correct { background: rgba(42,110,58,0.1); border: 1px solid rgba(42,110,58,0.3); color: rgba(245,240,232,0.9); }
+  .feedback-wrong { background: rgba(201,74,42,0.08); border: 1px solid rgba(201,74,42,0.3); color: rgba(245,240,232,0.9); }
+
+  .feedback-title { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .feedback-correct .feedback-title { color: #4ab864; }
+  .feedback-wrong .feedback-title { color: var(--coral); }
+
+  .key-unlocked {
+    margin-top: 1.5rem;
+    background: rgba(232,160,32,0.08);
+    border: 1px solid rgba(232,160,32,0.3);
+    border-radius: 14px; padding: 1.25rem;
+    display: none;
+  }
+  .key-unlocked.show { display: block; }
+  .key-title { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--amber); margin-bottom: 8px; }
+  .key-text { font-size: 14px; line-height: 1.7; color: rgba(245,240,232,0.85); }
+  .key-text strong { color: var(--paper); font-weight: 500; }
+
+  .room-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1.25rem 1.75rem;
+    border-top: 1px solid rgba(245,240,232,0.08);
+  }
+
+  .attempts-counter { font-size: 13px; color: rgba(245,240,232,0.4); font-family: 'Syne', sans-serif; }
+
+  /* ── FINALE SCREEN ── */
+  #finale {
+    align-items: center; justify-content: center;
+    padding: 2rem; text-align: center;
+  }
+
+  .finale-icon { font-size: 4rem; margin-bottom: 1.5rem; }
+
+  .finale-title {
+    font-family: 'Syne', sans-serif; font-size: clamp(1.8rem, 5vw, 3rem);
+    font-weight: 800; color: var(--paper); margin-bottom: 1rem;
+  }
+  .finale-title span { color: var(--amber); }
+
+  .finale-sub {
+    font-size: 1rem; color: rgba(245,240,232,0.6);
+    max-width: 480px; margin: 0 auto 2rem; line-height: 1.7;
+  }
+
+  .manuale-box {
+    background: rgba(245,240,232,0.04);
+    border: 1px solid rgba(245,240,232,0.1);
+    border-radius: 20px; padding: 2rem;
+    max-width: 640px; margin: 0 auto 2rem; text-align: left;
+  }
+
+  .manuale-title {
+    font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--amber);
+    margin-bottom: 1.25rem;
+  }
+
+  .manuale-item {
+    display: flex; gap: 12px; margin-bottom: 1rem; align-items: flex-start;
+  }
+
+  .manuale-key {
+    width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+
+  .manuale-text { font-size: 14px; line-height: 1.7; color: rgba(245,240,232,0.8); }
+  .manuale-text strong { color: var(--paper); font-weight: 500; }
+
+  .debrief-box {
+    background: rgba(90,62,138,0.12);
+    border: 1px solid rgba(90,62,138,0.3);
+    border-radius: 16px; padding: 1.5rem;
+    max-width: 640px; margin: 0 auto 2rem; text-align: left;
+  }
+
+  .debrief-title { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #a080e0; margin-bottom: 1rem; }
+  .debrief-q { font-size: 14px; color: rgba(245,240,232,0.8); line-height: 1.7; margin-bottom: .6rem; padding-left: 1rem; border-left: 2px solid rgba(160,128,224,0.3); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .6; } }
+
+  .anim-in { animation: fadeIn .5s ease forwards; }
+
+  .locked-overlay {
+    font-size: 2rem; position: absolute; top: 1.25rem; right: 1.25rem;
+    opacity: .4;
+  }
+
+  /* responsive */
+  @media (max-width: 600px) {
+    .roles-grid { grid-template-columns: 1fr; }
+    .room-hero { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════
+     SCREEN 1 — INTRO
+══════════════════════════════ -->
+<div class="screen active" id="intro">
+  <div style="max-width:660px; margin: auto; padding: 3rem 1.5rem; text-align:center;">
+    <span class="intro-badge">🔐 Escape Room · Didattica Inclusiva</span>
+
+    <h1 class="intro-title">La Classe<br>di <span>Nessuno</span></h1>
+
+    <p class="intro-sub">In questa scuola immaginaria, cinque bambini vengono esclusi dalle attività — non per cattiveria, ma per abitudine. Il vostro compito è trovare la chiave giusta per ognuno di loro.</p>
+
+    <div class="story-box">
+      <p>Siete il <strong>Gruppo di Intervento Didattico</strong> dell'Istituto Comprensivo "G. Rodari". La preside vi ha convocato d'urgenza: cinque alunni stanno attraversando una settimana difficile. Nessuno li esclude di proposito — eppure restano ai margini.</p>
+      <p>Ogni stanza contiene gli indizi lasciati dall'insegnante di classe, le parole del bambino, e un enigma da risolvere. <strong>Non c'è una sola risposta giusta</strong> — ma alcune sono più efficaci di altre. Discutete, ragionate, scegliete insieme.</p>
+    </div>
+
+    <h3 style="font-family:'Syne',sans-serif; font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:rgba(245,240,232,0.4); margin-bottom:1rem;">Ruoli nel gruppo</h3>
+
+    <div class="roles-grid">
+      <div class="role-card">
+        <div class="role-icon" style="background:rgba(232,160,32,0.15);">🔍</div>
+        <div>
+          <div class="role-name">Detective</div>
+          <div class="role-desc">Facilita la discussione, fa domande, evita che si vada fuori tema</div>
+        </div>
+      </div>
+      <div class="role-card">
+        <div class="role-icon" style="background:rgba(26,122,110,0.15);">📋</div>
+        <div>
+          <div class="role-name">Archivista</div>
+          <div class="role-desc">Prende nota delle scelte e delle motivazioni del gruppo</div>
+        </div>
+      </div>
+      <div class="role-card">
+        <div class="role-icon" style="background:rgba(201,74,42,0.15);">🎤</div>
+        <div>
+          <div class="role-name">Portavoce</div>
+          <div class="role-desc">Presenta le conclusioni del gruppo alla restituzione finale</div>
+        </div>
+      </div>
+      <div class="role-card">
+        <div class="role-icon" style="background:rgba(90,62,138,0.15);">👁</div>
+        <div>
+          <div class="role-name">Osservatore</div>
+          <div class="role-desc">Nota come il gruppo prende le decisioni — lo racconterà nel debriefing</div>
+        </div>
+      </div>
+      <div class="role-card" style="grid-column: span 2;">
+        <div class="role-icon" style="background:rgba(26,80,130,0.15);">⏱</div>
+        <div>
+          <div class="role-name">Cronometrista</div>
+          <div class="role-desc">Tiene il tempo per ogni stanza e segnala quando si sta divagando</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="startGame()">Inizia la missione →</button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     SCREEN 2 — MAPPA
+══════════════════════════════ -->
+<div class="screen" id="map">
+  <div style="max-width:900px; margin:auto; padding:2rem 1.5rem; width:100%; display:flex; flex-direction:column; align-items:center; gap:1.5rem;">
+
+    <div class="map-header" style="width:100%;">
+      <div class="progress-bar-wrap">
+        <span class="progress-label">Progresso</span>
+        <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+        <span style="font-family:'Syne',sans-serif; font-size:12px; font-weight:600; color:rgba(245,240,232,0.4);" id="progressText">0 / 5</span>
+      </div>
+      <h2 class="map-title">Scegli una stanza</h2>
+      <p class="map-sub">Ogni stanza è un bambino. Trovate la chiave per sbloccarli tutti e cinque.</p>
+    </div>
+
+    <div class="rooms-grid" id="roomsGrid"></div>
+
+    <div id="mapFinaleBtn" style="display:none; text-align:center; margin-top:1rem;">
+      <p style="font-size:14px; color:rgba(245,240,232,0.55); margin-bottom:1rem;">Tutte le stanze sbloccate — la missione è completa.</p>
+      <button class="btn-primary" onclick="showFinale()">Vai al debriefing →</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     SCREEN 3 — STANZA
+══════════════════════════════ -->
+<div class="screen" id="room">
+  <div class="room-layout" style="max-width:820px; margin:auto; padding:2rem 1.5rem;">
+
+    <div class="room-top-bar">
+      <button class="back-btn" onclick="goToMap()">← Torna alla mappa</button>
+      <span class="room-breadcrumb" id="roomBreadcrumb">Stanza 1</span>
+    </div>
+
+    <div class="room-main" id="roomContent"></div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     SCREEN 4 — FINALE
+══════════════════════════════ -->
+<div class="screen" id="finale">
+  <div style="max-width:680px; margin:auto; padding:3rem 1.5rem;">
+
+    <div style="text-align:center; margin-bottom:2rem;">
+      <div class="finale-icon">🔓</div>
+      <h1 class="finale-title">Missione<br><span>Completata</span></h1>
+      <p class="finale-sub">Avete trovato le chiavi per tutti e cinque i bambini. Questo è il <strong>Manuale dell'Inclusione</strong> che avete costruito insieme — portatelo via.</p>
+    </div>
+
+    <div class="manuale-box">
+      <div class="manuale-title">📖 Il vostro manuale dell'inclusione</div>
+
+      <div class="manuale-item">
+        <div class="manuale-key" style="background:rgba(232,160,32,0.15);">🗝️</div>
+        <div class="manuale-text"><strong>Chiave 1 — La comunicazione aumenta per tutti:</strong> adattare i codici comunicativi (simboli, immagini, gesti) non è una compensazione per chi ha difficoltà — è una risorsa che arricchisce la comprensione di tutti.</div>
+      </div>
+
+      <div class="manuale-item">
+        <div class="manuale-key" style="background:rgba(26,122,110,0.15);">🗝️</div>
+        <div class="manuale-text"><strong>Chiave 2 — Il gruppo come risorsa:</strong> strutturare la cooperazione (ruoli, interdipendenza, responsabilità) permette a chi fatica nella produzione individuale di contribuire in modo riconoscibile e valorizzato.</div>
+      </div>
+
+      <div class="manuale-item">
+        <div class="manuale-key" style="background:rgba(201,74,42,0.15);">🗝️</div>
+        <div class="manuale-text"><strong>Chiave 3 — Valutare il percorso, non solo il prodotto:</strong> chi non riesce a dimostrare le competenze nei formati standard può farlo attraverso canali diversi — orali, visivi, pratici, cooperativi.</div>
+      </div>
+
+      <div class="manuale-item">
+        <div class="manuale-key" style="background:rgba(90,62,138,0.15);">🗝️</div>
+        <div class="manuale-text"><strong>Chiave 4 — La prevedibilità è accessibilità:</strong> strutturare le transizioni con segnali visivi e rituali stabili non è una concessione a chi ha difficoltà — è un beneficio per tutti. La chiarezza del contesto libera energia cognitiva per l'apprendimento.</div>
+      </div>
+
+      <div class="manuale-item">
+        <div class="manuale-key" style="background:rgba(26,80,130,0.15);">🗝️</div>
+        <div class="manuale-text"><strong>Chiave 5 — L'invisibile ha bisogno di essere visto:</strong> gli alunni che "non danno problemi" rischiano di restare fuori dal radar. L'inclusione riguarda anche chi non chiede aiuto — perché spesso non sa come farlo.</div>
+      </div>
+    </div>
+
+    <div class="debrief-box">
+      <div class="debrief-title">💬 Domande per il debriefing</div>
+      <p class="debrief-q">Come avete preso le decisioni nel gruppo? Chi ha parlato di più, chi ha aspettato?</p>
+      <p class="debrief-q">C'è stato un momento in cui vi siete bloccati — cosa vi ha sbloccato?</p>
+      <p class="debrief-q">Quale dei cinque bambini vi ha colpito di più, e perché?</p>
+      <p class="debrief-q">C'è un bambino che assomiglia a qualcuno nella vostra classe reale?</p>
+      <p class="debrief-q">Una delle chiavi che avete trovato potreste usarla già la settimana prossima?</p>
+    </div>
+
+    <div style="text-align:center;">
+      <button class="btn-primary" onclick="restartGame()" style="margin-right:12px;">Rigioca →</button>
+      <button class="btn-secondary" onclick="window.print()">Stampa il manuale</button>
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+// ══════════════════════════════
+// DATI DELLE STANZE
+// ══════════════════════════════
+const rooms = [
+  {
+    id: 0,
+    color: 'c-amber',
+    accentColor: '#e8a020',
+    accentBg: 'rgba(232,160,32,0.15)',
+    avatar: '👦',
+    avatarBg: 'rgba(232,160,32,0.15)',
+    name: 'Luca',
+    age: '8 anni · Classe 3ª',
+    tags: ['Difficoltà di comprensione orale', 'Famiglia straniera', 'Silenzioso'],
+    label: 'Stanza 1',
+    preview: 'Luca capisce tutto quando glielo mostri. Ma le consegne a voce si perdono prima di arrivare.',
+
+    clue: `<strong>Note dell'insegnante:</strong> Luca viene da una famiglia arabofona. Il suo italiano parlato è ancora incerto, ma quando lavora con immagini o dimostrazioni pratiche, fa tutto correttamente. In classe ascolto le consegne orali — Luca spesso inizia l'attività sbagliata, poi copia dai compagni. Ho provato a rallentare, ma i tempi si allungano per tutti.`,
+
+    voice: `Quando la maestra parla tanto e veloce, le parole si mescolano. Se mi fa vedere cosa devo fare, capisco subito. Una volta ho disegnato la risposta e lei ha detto che era giusta — ma di solito devo scrivere.`,
+    voiceAuthor: '— Luca, 8 anni',
+
+    question: 'Qual è la modifica più efficace per permettere a Luca di partecipare pienamente alle attività?',
+    options: [
+      { letter: 'A', text: 'Assegnare a Luca un compagno "traduttore" che gli spiega le consegne in arabo durante l\'attività.', correct: false, feedback: 'Questa soluzione delega il problema a un compagno, creando una dipendenza e potenzialmente isolando Luca ulteriormente. Non modifica la struttura della comunicazione per tutti.' },
+      { letter: 'B', text: 'Affiancare alle consegne orali una picture schedule con simboli e immagini sequenziali, visibile a tutta la classe sul monitor.', correct: true, feedback: 'Esatto. La picture schedule è uno strumento CAA che rende la consegna accessibile visivamente — non solo per Luca, ma per tutti gli alunni che hanno tempi di elaborazione uditiva diversi. Non rallenta la classe, anzi la ancora.' },
+      { letter: 'C', text: 'Semplificare le consegne usando frasi brevi e ripetere ogni istruzione due volte ad alta voce.', correct: false, feedback: 'Ripetere e semplificare è utile ma non sufficiente: rimane un canale esclusivamente orale. Luca ha bisogno di un codice visivo, non solo di più parole.' },
+      { letter: 'D', text: 'Preparare per Luca una scheda individuale in arabo con le istruzioni tradotte da un servizio online.', correct: false, feedback: 'Questa soluzione separa Luca dal resto della classe e crea un materiale parallelo. L\'obiettivo inclusivo è modificare la struttura comune, non creare percorsi differenziati invisibili.' }
+    ],
+    keyText: 'La <strong>picture schedule</strong> — una sequenza visiva di simboli o immagini che rappresenta i passi di un\'attività — è uno strumento CAA di base, non invasivo, che può essere proiettato per tutta la classe. Riduce il carico di elaborazione uditiva e rende la consegna accessibile a tutti.'
+  },
+
+  {
+    id: 1,
+    color: 'c-teal',
+    accentColor: '#1a7a6e',
+    accentBg: 'rgba(26,122,110,0.15)',
+    avatar: '👧',
+    avatarBg: 'rgba(26,122,110,0.15)',
+    name: 'Sofia',
+    age: '9 anni · Classe 4ª',
+    tags: ['Disabilità motoria', 'Comunicazione verbale fluente', 'Esclusa dal lavoro di gruppo'],
+    label: 'Stanza 2',
+    preview: 'Sofia parla benissimo e pensa benissimo. Ma nelle attività di gruppo nessuno le assegna un ruolo che riesca a fare.',
+
+    clue: `<strong>Note dell'insegnante:</strong> Sofia ha una disabilità motoria che limita la scrittura a mano e alcune attività manipolative. Cognitivamente è la più brillante della classe. Il problema emerge nel lavoro di gruppo: i compagni tendono a farla da parte ("la faccio io che faccio prima") o le assegnano ruoli passivi ("tu controlla che non sbagliamo"). Sofia non protesta mai, ma a fine giornata piange spesso.`,
+
+    voice: `Quando lavoriamo in gruppo mi mettono sempre a guardare. Dicono che mi aiutano ma in realtà fanno tutto loro. Io so le risposte, ma non mi chiedono mai. Vorrei avere un ruolo vero.`,
+    voiceAuthor: '— Sofia, 9 anni',
+
+    question: 'Come si struttura un\'attività cooperativa che garantisca a Sofia un contributo reale e riconosciuto?',
+    options: [
+      { letter: 'A', text: 'Assegnare a Sofia il ruolo di "esperta" che il gruppo deve consultare obbligatoriamente prima di ogni decisione.', correct: false, feedback: 'Il ruolo di esperta consultiva è migliore del nulla, ma rimane un ruolo passivo e laterale rispetto al flusso del gruppo. Sofia resta "fuori" dalla produzione principale.' },
+      { letter: 'B', text: 'Fare lavorare Sofia sempre individualmente, per valorizzare le sue capacità senza i limiti del gruppo.', correct: false, feedback: 'Questa scelta esclude Sofia dall\'esperienza cooperativa — che è parte integrante dell\'apprendimento — e la isola ulteriormente. Non è inclusione.' },
+      { letter: 'C', text: 'Strutturare i ruoli cooperativi (J&J) in modo che il contributo di Sofia sia orale o digitale: portavoce, intervistatore, lettore delle consegne, digitatore sulla LIM.', correct: true, feedback: 'Corretto. Assegnare ruoli cooperativi che sfruttano i punti di forza di Sofia (eloquio, pensiero, memoria) e che usano canali accessibili (voce, tastiera, LIM) permette un contributo autentico e riconoscibile. Gli altri hanno bisogno di lei per funzionare.' },
+      { letter: 'D', text: 'Parlare con i compagni e spiegare che devono includere Sofia, chiedendo loro di essere più pazienti.', correct: false, feedback: 'Affidarsi alla buona volontà dei compagni non è una struttura: è un appello morale che non regge nel tempo. Il Cooperative Learning insegna che l\'inclusione va progettata nella struttura dell\'attività, non delegata ai valori individuali.' }
+    ],
+    keyText: 'I <strong>ruoli cooperativi strutturati</strong> (J&J) vanno progettati a partire dai punti di forza di tutti i componenti del gruppo, non dopo. Un ruolo come "portavoce" o "intervistatore" crea interdipendenza positiva: il gruppo ha bisogno di Sofia per funzionare, non nonostante Sofia.'
+  },
+
+  {
+    id: 2,
+    color: 'c-coral',
+    accentColor: '#c94a2a',
+    accentBg: 'rgba(201,74,42,0.15)',
+    avatar: '🧒',
+    avatarBg: 'rgba(201,74,42,0.15)',
+    name: 'Matteo',
+    age: '10 anni · Classe 5ª',
+    tags: ['DSA (dislessia)', 'Evita le verifiche', 'Brillante nelle discussioni orali'],
+    label: 'Stanza 3',
+    preview: 'In classe Matteo è il più curioso. Sulla carta di verifica, sparisce.',
+
+    clue: `<strong>Note dell'insegnante:</strong> Matteo ha una diagnosi di dislessia. In classe partecipa attivamente, fa collegamenti inattesi, fa domande brillanti. Ma alle verifiche scritte cade: i tempi sono stretti, l'ansia blocca tutto, gli errori ortografici fanno calare il voto anche quando il contenuto è corretto. Ho provato a dargli più tempo, ma dice che si sente "diverso" quando tutti hanno finito e lui è ancora lì.`,
+
+    voice: `Quando la maestra chiede a voce io so sempre la risposta. Poi arriva il compito scritto e mi dimentico tutto. Non è che non so — è che la penna non va veloce come la testa. E poi tutti finiscono prima e io mi vergogno.`,
+    voiceAuthor: '— Matteo, 10 anni',
+
+    question: 'Quale intervento sulla valutazione rispetta le competenze reali di Matteo senza isolarlo dal gruppo?',
+    options: [
+      { letter: 'A', text: 'Sostituire la verifica scritta individuale con una verifica orale privata con l\'insegnante, fuori dalla classe.', correct: false, feedback: 'La verifica orale individuale fuori aula separa Matteo dalla classe, accentuando il senso di diversità che già lo pesa. E non è sempre praticabile organizzativamente.' },
+      { letter: 'B', text: 'Permettere a Matteo di usare strumenti compensativi (sintesi vocale, mappe, dizionario) durante la verifica scritta ordinaria, come tutti gli altri strumenti che usa.', correct: false, feedback: 'Gli strumenti compensativi sono necessari ma non sufficienti da soli: il formato rimane scritto-individuale e il confronto temporale con i compagni rimane visibile. Il problema dell\'ansia e del senso di differenza non è risolto.' },
+      { letter: 'C', text: 'Progettare una valutazione autentica in cui il gruppo produce un prodotto finale (video, presentazione, poster) e Matteo contribuisce con il suo punto di forza — la comunicazione orale — all\'interno del lavoro collettivo.', correct: true, feedback: 'Questa è la risposta più inclusiva: la valutazione per prodotto autentico in gruppo permette a Matteo di contribuire con i suoi punti di forza reali, rende invisibile la difficoltà ortografica, e non lo isola. Il voto riflette la competenza effettiva, non il formato.' },
+      { letter: 'D', text: 'Valutare Matteo solo oralmente durante le discussioni in classe, senza verifiche scritte formali.', correct: false, feedback: 'Eliminare completamente la verifica scritta non prepara Matteo ad affrontare situazioni in cui il formato scritto è necessario, e crea un percorso separato che a lungo termine non lo serve.' }
+    ],
+    keyText: 'La <strong>valutazione per prodotto autentico cooperativo</strong> — un video, una presentazione, un progetto — permette di valutare le competenze reali attraverso canali diversi dalla scrittura individuale. Non è un\'agevolazione: è una scelta di progettazione che rende visibili competenze che il formato standard nasconde.'
+  },
+
+  {
+    id: 3,
+    color: 'c-purple',
+    accentColor: '#7a5ec0',
+    accentBg: 'rgba(90,62,138,0.18)',
+    avatar: '🧑',
+    avatarBg: 'rgba(90,62,138,0.18)',
+    name: 'Omar',
+    age: '7 anni · Classe 2ª',
+    tags: ['Disturbo dello spettro autistico', 'Difficoltà nelle transizioni', 'Rigidità nelle routine'],
+    label: 'Stanza 4',
+    preview: 'Omar sa quello che deve fare. Ma quando l\'attività cambia senza preavviso, il mondo crolla.',
+
+    clue: `<strong>Note dell'insegnante:</strong> Omar ha una diagnosi di disturbo dello spettro autistico. Lavora bene quando sa cosa lo aspetta. Il problema si presenta ogni volta che c'è un cambio di attività improvviso, un'interruzione, o un'uscita dalla routine. In quei momenti si blocca, inizia a dondolarsi, a volte urla. Oggi mi hanno comunicato che domani ci sarà un'assemblea a sorpresa — già so che sarà una giornata difficile. I colleghi mi chiedono di "gestirlo" ma non capisco come strutturare il passaggio.`,
+
+    voice: `Quando la maestra dice "adesso cambiamo" e io non lo sapevo, sento tutto rumore. Non è che non voglio fare la cosa nuova — è che la mia testa non era pronta. Se me lo dicono prima, posso prepararmi.`,
+    voiceAuthor: '— Omar, 7 anni',
+
+    question: 'Come si prepara Omar — e la classe — a una transizione imprevista o a un cambio di attività?',
+    options: [
+      { letter: 'A', text: 'Esonerare Omar dall\'attività nuova e lasciarlo continuare con quella precedente finché non è pronto da solo.', correct: false, feedback: 'Questa scelta evita il problema invece di risolverlo: Omar resta isolato e non acquisisce strumenti per gestire le transizioni future. L\'obiettivo è la progressiva autonomia, non la protezione permanente dall\'imprevedibile.' },
+      { letter: 'B', text: 'Avvisare Omar in anticipo usando un supporto visivo — timer, agenda illustrata del giorno, simbolo "cambio attività" — e preparargli una breve routine di transizione sempre uguale.', correct: true, feedback: 'Esatto. La prevedibilità visiva (agenda illustrata, timer, segnale di transizione) è uno strumento CAA che riduce l\'ansia da cambio perché rende il futuro immediato accessibile e decodificabile. La routine di transizione fissa diventa un ponte tra una attività e l\'altra, per Omar e — indirettamente — per tutta la classe.' },
+      { letter: 'C', text: 'Parlare con Omar la mattina e spiegargli verbalmente cosa succederà durante la giornata, chiedendogli se è d\'accordo.', correct: false, feedback: 'La spiegazione verbale è meglio del silenzio, ma per Omar il canale orale non è sufficiente: l\'informazione va ancorata a un supporto visivo che possa consultare nel momento del cambio, non solo ascoltare al mattino.' },
+      { letter: 'D', text: 'Formare un "buddy di transizione": un compagno che accompagna fisicamente Omar durante ogni cambio di attività tenendogli la mano.', correct: false, feedback: 'Il compagno di supporto crea dipendenza da una persona specifica e non sviluppa l\'autonomia di Omar. Se il buddy è assente, il sistema crolla. Meglio un supporto ambientale (visivo, strutturale) che non dipenda da un\'altra persona.' }
+    ],
+    keyText: 'L\'<strong>agenda visiva giornaliera</strong> e i <strong>segnali di transizione</strong> (timer visivo, simbolo "adesso cambiamo") sono strumenti CAA che rendono il tempo scolastico prevedibile e accessibile. Non sono strumenti "speciali per Omar" — sono strumenti di organizzazione che beneficiano l\'intera classe, riducendo per tutti l\'ansia da imprevisto.'
+  },
+
+  {
+    id: 4,
+    color: 'c-blue',
+    accentColor: '#2a6aaa',
+    accentBg: 'rgba(26,80,150,0.15)',
+    avatar: '👧',
+    avatarBg: 'rgba(26,80,150,0.15)',
+    name: 'Ginevra',
+    age: '11 anni · Classe 5ª',
+    tags: ['Alta sensibilità emotiva', '"Non dà problemi"', 'Invisibile al radar della classe'],
+    label: 'Stanza 5',
+    preview: 'Ginevra è brava, gentile, silenziosa. Per questo nessuno si accorge che sta annegando.',
+
+    clue: `<strong>Note dell'insegnante:</strong> Ginevra è una delle migliori della classe — precisa, diligente, non chiede mai aiuto. Ma ultimamente l'ho notata diversa: porta sempre i compiti fatti ma non partecipa mai alle discussioni, anche quando conosce la risposta. Nelle attività di gruppo si adatta a qualsiasi ruolo senza mai esprimere una preferenza. La scorsa settimana ha consegnato un elaborato eccellente ma pieno di frasi come "forse sbaglio", "non sono sicura che conti". Ho parlato con la famiglia: a casa piange spesso per la scuola ma non dice perché.`,
+
+    voice: `Faccio tutto quello che chiedono e cerco di non disturbare. Ma dentro ho tante cose da dire e non le dico perché ho paura che siano sbagliate. Quando finalmente parlo e la maestra dice "bravo" a qualcun altro subito dopo, è come se la mia voce non ci fosse.`,
+    voiceAuthor: '— Ginevra, 11 anni',
+
+    question: 'Come si rende Ginevra visibile — come persona, non solo come alunna che "funziona"?',
+    options: [
+      { letter: 'A', text: 'Chiamarla più spesso durante le interrogazioni orali, per darle occasioni pubbliche di mostrare le sue competenze.', correct: false, feedback: 'Più visibilità pubblica non risolve il problema di Ginevra — anzi, potrebbe aumentare l\'ansia da prestazione. Il suo bisogno non è dimostrare di saper fare, ma sentire che il suo punto di vista ha valore indipendentemente dal risultato.' },
+      { letter: 'B', text: 'Strutturare momenti di condivisione a bassa soglia — think-pair-share, scrittura libera pre-discussione, ruolo di "lettore delle idee del gruppo" — che rendano obbligatorio e normale esprimere la propria opinione per tutti.', correct: true, feedback: 'Corretto. Strutture cooperative a bassa soglia (J&J: think-pair-share, scrittura individuale prima della discussione) normalizzano l\'espressione del punto di vista personale per tutti — non solo per chi è già sicuro. Ginevra non deve "trovare il coraggio": deve avere una struttura che renda la sua voce attesa e necessaria.' },
+      { letter: 'C', text: 'Parlare privatamente con Ginevra e incoraggiarla a partecipare di più, rassicurandola che le sue risposte sono sempre buone.', correct: false, feedback: 'Il colloquio privato è utile ma non sufficiente: cambia la relazione one-to-one ma non modifica la struttura della classe. Il giorno dopo, Ginevra torna in un contesto invariato. L\'intervento efficace è strutturale, non solo relazionale.' },
+      { letter: 'D', text: 'Segnalare il caso al team di supporto psicologico scolastico per una valutazione, in attesa che emergano bisogni più chiari.', correct: false, feedback: 'Il supporto psicologico può essere utile in parallelo, ma non è la risposta didattica. L\'insegnante può agire già ora con strumenti di didattica inclusiva — aspettare una diagnosi o una segnalazione significa lasciare Ginevra invisibile per mesi.' }
+    ],
+    keyText: 'Le strutture cooperative <strong>think-pair-share</strong> e la scrittura individuale pre-discussione (J&J) creano un contesto in cui esprimere la propria opinione è atteso e strutturale, non volontario e coraggioso. Chi ha paura di sbagliare in pubblico ha bisogno di un\'architettura che renda la partecipazione normale — non di più incoraggiamento a farlo da soli.'
+  }
+];
+
+// ══════════════════════════════
+// STATO DEL GIOCO
+// ══════════════════════════════
+let solved = [false, false, false, false, false];
+let currentRoom = -1;
+let attempts = [0, 0, 0, 0, 0];
+
+// ══════════════════════════════
+// NAVIGAZIONE
+// ══════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame() { showScreen('map'); buildMap(); }
+function goToMap() { showScreen('map'); buildMap(); }
+function showFinale() { showScreen('finale'); }
+
+function restartGame() {
+  solved = [false, false, false, false, false];
+  attempts = [0, 0, 0, 0, 0];
+  showScreen('intro');
+}
+
+// ══════════════════════════════
+// MAPPA
+// ══════════════════════════════
+function buildMap() {
+  const grid = document.getElementById('roomsGrid');
+  grid.innerHTML = '';
+  const solvedCount = solved.filter(Boolean).length;
+  document.getElementById('progressFill').style.width = (solvedCount / 5 * 100) + '%';
+  document.getElementById('progressText').textContent = solvedCount + ' / 5';
+
+  rooms.forEach((r, i) => {
+    const card = document.createElement('div');
+    card.className = 'room-card ' + r.color + (solved[i] ? ' solved' : '');
+    card.innerHTML = `
+      <div class="room-number" style="color:${r.accentColor}">${r.label}</div>
+      <div class="room-avatar" style="background:${r.avatarBg}">${r.avatar}</div>
+      <div class="room-name">${r.name}</div>
+      <div class="room-age">${r.age}</div>
+      <div class="room-preview">${r.preview}</div>
+      <div class="room-status ${solved[i] ? 'status-solved' : 'status-open'}">
+        <span class="status-dot"></span>
+        <span>${solved[i] ? 'Sbloccata ✓' : 'Entra →'}</span>
+      </div>
+    `;
+    card.addEventListener('click', () => openRoom(i));
+    grid.appendChild(card);
+  });
+
+  const allSolved = solved.every(Boolean);
+  document.getElementById('mapFinaleBtn').style.display = allSolved ? 'block' : 'none';
+}
+
+// ══════════════════════════════
+// STANZA
+// ══════════════════════════════
+function openRoom(i) {
+  currentRoom = i;
+  const r = rooms[i];
+  showScreen('room');
+  document.getElementById('roomBreadcrumb').textContent = r.label + ' — ' + r.name;
+
+  const isSolved = solved[i];
+
+  let optionsHTML = r.options.map((o, oi) => {
+    let cls = 'option-btn';
+    if (isSolved) {
+      cls += o.correct ? ' selected-correct disabled' : ' disabled';
+    }
+    return `<button class="${cls}" onclick="selectOption(${i}, ${oi})" id="opt-${i}-${oi}">
+      <span class="option-letter">${o.letter}</span>
+      <span>${o.text}</span>
+    </button>`;
+  }).join('');
+
+  let feedbackHTML = '';
+  if (isSolved) {
+    const correct = r.options.find(o => o.correct);
+    feedbackHTML = `<div class="feedback-box feedback-correct show">
+      <div class="feedback-title">✓ Stanza sbloccata</div>
+      ${correct.feedback}
+    </div>`;
+  }
+
+  let keyHTML = isSolved ? `<div class="key-unlocked show">
+    <div class="key-title">🗝️ Chiave trovata</div>
+    <div class="key-text">${r.keyText}</div>
+  </div>` : '';
+
+  document.getElementById('roomContent').innerHTML = `
+    <div class="room-hero" style="border-bottom-color:rgba(245,240,232,0.08);">
+      <div class="room-hero-avatar" style="background:${r.avatarBg}">${r.avatar}</div>
+      <div class="room-hero-info">
+        <div class="room-hero-label" style="color:${r.accentColor}">${r.label}</div>
+        <div class="room-hero-name">${r.name}</div>
+        <div class="room-hero-tags">${r.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+      </div>
+    </div>
+
+    <div class="room-sections">
+
+      <div class="section-block">
+        <div class="section-title">
+          <span class="section-title-dot" style="background:${r.accentColor}"></span>
+          <span style="color:${r.accentColor}">Note dell'insegnante</span>
+        </div>
+        <div class="clue-box" style="border-left-color:${r.accentColor}">${r.clue}</div>
+      </div>
+
+      <div class="section-block">
+        <div class="section-title">
+          <span class="section-title-dot" style="background:rgba(245,240,232,0.3)"></span>
+          <span style="color:rgba(245,240,232,0.5)">La voce del bambino</span>
+        </div>
+        <div class="voice-box">
+          ${r.voice}
+          <div class="voice-author">${r.voiceAuthor}</div>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <div class="section-title">
+          <span class="section-title-dot" style="background:#e8a020"></span>
+          <span style="color:#e8a020">L'enigma</span>
+        </div>
+        <div class="enigma-box">
+          <div class="enigma-question">${r.question}</div>
+          <div class="options-list" id="optsList-${i}">${optionsHTML}</div>
+          <div id="feedback-${i}">${feedbackHTML}</div>
+          ${keyHTML}
+        </div>
+      </div>
+
+    </div>
+
+    <div class="room-nav">
+      <span class="attempts-counter" id="attemptsLabel-${i}">
+        ${isSolved ? '✓ Completata' : (attempts[i] > 0 ? 'Tentativi: ' + attempts[i] : 'Discutete, poi scegliete')}
+      </span>
+      <button class="btn-secondary" onclick="goToMap()">← Torna alla mappa</button>
+    </div>
+  `;
+}
+
+// ══════════════════════════════
+// SELEZIONE RISPOSTA
+// ══════════════════════════════
+function selectOption(roomIdx, optIdx) {
+  if (solved[roomIdx]) return;
+  const r = rooms[roomIdx];
+  const opt = r.options[optIdx];
+  attempts[roomIdx]++;
+
+  const btn = document.getElementById('opt-' + roomIdx + '-' + optIdx);
+  const feedbackEl = document.getElementById('feedback-' + roomIdx);
+  const attemptsEl = document.getElementById('attemptsLabel-' + roomIdx);
+
+  if (opt.correct) {
+    // RISPOSTA CORRETTA
+    solved[roomIdx] = true;
+    btn.classList.add('selected-correct', 'disabled');
+
+    // Disabilita le altre
+    r.options.forEach((_, i) => {
+      const b = document.getElementById('opt-' + roomIdx + '-' + i);
+      if (b) b.classList.add('disabled');
+    });
+
+    feedbackEl.innerHTML = `<div class="feedback-box feedback-correct show">
+      <div class="feedback-title">✓ Chiave trovata!</div>
+      ${opt.feedback}
+    </div>
+    <div class="key-unlocked show">
+      <div class="key-title">🗝️ Principio sbloccato</div>
+      <div class="key-text">${r.keyText}</div>
+    </div>`;
+
+    attemptsEl.textContent = '✓ Stanza completata';
+
+    // Dopo 1.5s torna alla mappa automaticamente
+    setTimeout(() => {
+      goToMap();
+      const allSolved = solved.every(Boolean);
+      if (allSolved) {
+        setTimeout(() => showFinale(), 400);
+      }
+    }, 2800);
+
+  } else {
+    // RISPOSTA SBAGLIATA
+    btn.classList.add('selected-wrong');
+    setTimeout(() => btn.classList.remove('selected-wrong'), 1200);
+
+    feedbackEl.innerHTML = `<div class="feedback-box feedback-wrong show">
+      <div class="feedback-title">✗ Non ancora...</div>
+      ${opt.feedback}
+    </div>`;
+
+    attemptsEl.textContent = 'Tentativi: ' + attempts[roomIdx] + ' — riprovate';
+  }
+}
+</script>
+</body>
+</html>
